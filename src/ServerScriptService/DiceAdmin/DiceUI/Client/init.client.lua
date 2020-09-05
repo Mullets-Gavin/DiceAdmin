@@ -33,6 +33,8 @@ Libraries.DiceOutput = nil
 local Configs = {}
 Configs.Name = 'DiceUI'
 Configs.LogLimit = 150
+Configs.Timeout = 1
+Configs.Cache = {}
 Configs.Interface = {}
 Configs.Buttons = {
 	['Default'] = {
@@ -61,6 +63,12 @@ local function FilterMsg(message,color)
 		Logs.Last = message
 		Logs.Count = 1
 	end
+	if table.find(Configs.Cache,string.lower(message)) then return false end
+	table.insert(Configs.Cache,string.lower(message))
+	coroutine.wrap(function()
+		wait(Configs.Timeout)
+		table.remove(Configs.Cache,table.find(Configs.Cache,string.lower(message)))
+	end)()
 	if Libraries.DiceOutput then
 		for index,remove in pairs(Libraries.DiceOutput.Filter) do
 			if string.sub(message,1,#remove) == remove then
@@ -82,6 +90,7 @@ end
 
 local function CreateFeed(contents)
 	local message,dupe = FilterMsg(contents['Text'],contents['Color'])
+	if not message then return end
 	if dupe > 1 then
 		local getOld = Logs.Elements[#Logs.Elements]
 		if getOld then
@@ -303,5 +312,7 @@ coroutine.wrap(function()
 		Libraries.DiceOutput.Hook(function(contents)
 			CreateFeed(contents)
 		end)
+	else
+		Libraries.DiceAdmin = Services['ReplicatedStorage']:WaitForChild('DiceAdmin')
 	end
 end)()
