@@ -5,7 +5,7 @@
 
 --[[
 	[DOCUMENTATION]:
-	https://github.com/Mullets-Gavin/Mullet-Mafia/blob/master/DICEADMIN.md
+	https://github.com/Mullets-Gavin/DiceAdmin
 ]]--
 
 --// logic
