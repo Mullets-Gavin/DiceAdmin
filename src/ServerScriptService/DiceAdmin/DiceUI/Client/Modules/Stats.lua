@@ -39,9 +39,9 @@ local function Display(state)
 end
 
 local function UpdatePing()
-	local start = tick()
+	local start = os.clock()
 	DiceAdmin:Network('Ping')
-	local ping = math.round((tick() - start) * 1000)
+	local ping = math.round((os.clock() - start) * 1000)
 	local message = 'PING: '..ping..'ms'
 	local getSize = Services['TextService']:GetTextSize(message,PING.Title.TextSize,PING.Title.Font,Vector2.new(1000,PING.Title.TextSize))
 	PING.Title.Size = UDim2.new(0, getSize.X, 0, getSize.Y)

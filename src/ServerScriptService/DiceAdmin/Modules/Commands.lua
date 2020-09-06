@@ -617,8 +617,8 @@ local Commands = {
 Cmds.CommandList = Commands
 
 coroutine.wrap(function()
-	local currentClock = tick()
-	while not _G.YieldForDeck and tick() - currentClock < 1 do Services['RunService'].Heartbeat:Wait() end
+	local currentClock = os.clock()
+	while not _G.YieldForDeck and os.clock() - currentClock < 1 do Services['RunService'].Heartbeat:Wait() end
 	if _G.YieldForDeck then
 		local LoadLibrary = require(_G.YieldForDeck('PlayingCards'))
 		Cmds.DataStore = LoadLibrary('DiceDataStore')

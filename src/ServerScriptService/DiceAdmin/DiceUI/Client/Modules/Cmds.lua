@@ -77,9 +77,9 @@ Commands.Admin = {
 			local totals = 0
 			local logs = {}
 			for index = 1,TARGET do
-				local start = tick()
+				local start = os.clock()
 				Commands.DiceAdmin:Network('Ping')
-				local ping = math.round((tick() - start) * 1000)
+				local ping = math.round((os.clock() - start) * 1000)
 				print('Test',string.format('%02.f',index)..':',tostring(ping)..'ms')
 				table.insert(logs,ping)
 				totals = totals + ping
@@ -193,8 +193,8 @@ Commands.Admin = {
 }
 
 coroutine.wrap(function()
-	local currentClock = tick()
-	while not _G.YieldForDeck and tick() - currentClock < 1 do Services['RunService'].Heartbeat:Wait() end
+	local currentClock = os.clock()
+	while not _G.YieldForDeck and os.clock() - currentClock < 1 do Services['RunService'].Heartbeat:Wait() end
 	if _G.YieldForDeck then
 		Commands.LoadLibrary = require(_G.YieldForDeck('PlayingCards'))
 		Commands.DiceAdmin = Commands.LoadLibrary('DiceAdmin')

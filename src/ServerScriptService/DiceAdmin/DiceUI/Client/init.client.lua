@@ -18,7 +18,7 @@ local ChatMain = require(PlayerScripts:WaitForChild('ChatScript'):WaitForChild('
 local Cmds = Commands.Admin
 
 local Toggle = script.Parent:WaitForChild('Toggle')
-local MobileBar = script.Parent:WaitForChild('MobileBar')
+local MobileBar = script.Parent:WaitForChild('Mobile')
 local Console = script.Parent:WaitForChild('Console')
 local Command = Console:WaitForChild('Command')
 local Help = Console:WaitForChild('Help')
@@ -179,9 +179,7 @@ end
 
 local function EnableConsole()
 	if IsMobile() then
-		Console.AnchorPoint = Vector2.new(0.5, 1)
-		Console.Size = UDim2.new(1, 0, 1, -36)
-		Console.Position = UDim2.new(0.5, 0, 1, 0)
+		Console.Size = UDim2.new(1, 0, 1, -(Services['GuiService']:GetGuiInset().Y * 2))
 		MobileBar.Visible = true
 	end
 	Console.Visible = not Console.Visible
@@ -298,8 +296,8 @@ Services['UserInputService'].InputBegan:Connect(function(input,processed)
 end)
 
 coroutine.wrap(function()
-	local currentClock = tick()
-	while not _G.YieldForDeck and tick() - currentClock < 1 do Services['RunService'].Heartbeat:Wait() end
+	local currentClock = os.clock()
+	while not _G.YieldForDeck and os.clock() - currentClock < 1 do Services['RunService'].Heartbeat:Wait() end
 	if _G.YieldForDeck then
 		local LoadLibrary = require(_G.YieldForDeck('PlayingCards'))
 		Libraries.DiceAdmin = LoadLibrary('DiceAdmin')
