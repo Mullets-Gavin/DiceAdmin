@@ -56,7 +56,7 @@ local function update(dt)
 	local c = character()
 	if not c then return end
 	local cam_cf = workspace.CurrentCamera.CFrame
-	cam_cf = cam_cf - cam_cf.p
+	cam_cf -= cam_cf.p
 	c.PrimaryPart.CFrame = cam_cf + (c.PrimaryPart.Position + cam_cf * (move_dir * velocity * dt))
 	if move_dir.Magnitude > 0 then
 		velocity = math.clamp(velocity + dt * accel, 0, max_velocity)
