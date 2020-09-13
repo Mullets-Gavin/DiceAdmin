@@ -43,7 +43,7 @@ local function UpdatePing()
 	DiceAdmin:Network('Ping')
 	local ping = math.round((os.clock() - start) * 1000)
 	local message = 'PING: '..ping..'ms'
-	local getSize = Services['TextService']:GetTextSize(message,PING.Title.TextSize,PING.Title.Font,Vector2.new(1000,PING.Title.TextSize))
+	local getSize = Services['TextService']:GetTextSize(message,PING.Title.TextSize,PING.Title.Font,Vector2.new(1000,18))
 	PING.Title.Size = UDim2.new(0, getSize.X, 0, getSize.Y)
 	PING.Size = UDim2.new(0, getSize.X + 14, 0, 32)
 	PING.Title.Text = message
@@ -53,7 +53,7 @@ local function UpdateFPS()
 	local fps = 1/Services['RunService'].RenderStepped:Wait()
 	fps = math.round(fps)
 	local message = 'FPS: '..fps
-	local getSize = Services['TextService']:GetTextSize(message,FPS.Title.TextSize,FPS.Title.Font,Vector2.new(1000,FPS.Title.TextSize))
+	local getSize = Services['TextService']:GetTextSize(message,FPS.Title.TextSize,FPS.Title.Font,Vector2.new(1000,18))
 	FPS.Title.Size = UDim2.new(0, getSize.X, 0, getSize.Y)
 	FPS.Size = UDim2.new(0, getSize.X + 14, 0, 32)
 	FPS.Title.Text = message
