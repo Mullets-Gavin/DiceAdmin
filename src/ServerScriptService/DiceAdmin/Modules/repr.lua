@@ -16,7 +16,7 @@ print(repr(myTable)) --> {hello = "world", isCool = true, score = 5}
 ]]
  
 local defaultSettings = {
-	pretty = false;
+	pretty = true;
 	robloxFullName = false;
 	robloxProperFullName = true;
 	robloxClassName = true;
