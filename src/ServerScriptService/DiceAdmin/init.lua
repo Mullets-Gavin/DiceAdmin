@@ -25,9 +25,17 @@ local Services = setmetatable({}, {__index = function(cache, serviceName)
 end})
 
 --// variables
+local IsStudio = Services['RunService']:IsStudio()
+local IsServer = Services['RunService']:IsServer()
+local IsClient = Services['RunService']:IsClient()
+
 local Interface = script:FindFirstChild('DiceUI')
 local Modules = script:FindFirstChild('Modules')
 local Network = script:FindFirstChild('Network')
+local MsgService,Manager; do
+	MsgService = require(Modules:WaitForChild('MsgService'))
+	Manager = require(Modules:WaitForChild('Manager'))
+end
 
 --// functions
 local function CreateArgs(message)
@@ -49,8 +57,8 @@ local function ExecuteCmd(speaker,message)
 end
 
 function DiceAdmin.Launch(plr)
-	if not table.find(DiceAdmin.Admins,plr.UserId) and not Services['RunService']:IsStudio() then return end
-	if Services['RunService']:IsServer() then
+	if not table.find(DiceAdmin.Admins,plr.UserId) and not IsStudio then return end
+	if IsServer then
 		local UI = Interface:Clone()
 		UI.Parent = plr:WaitForChild('PlayerGui')
 		plr.Chatted:Connect(function(message)
@@ -63,13 +71,15 @@ function DiceAdmin.Launch(plr)
 end
 
 function DiceAdmin:Network(type,message,plr)
-	if Services['RunService']:IsServer() then
-		if not table.find(DiceAdmin.Admins,plr.UserId) and not Services['RunService']:IsStudio() then return end
-		local newCmd = DiceAdmin.Prefix..message
-		if string.sub(newCmd,1,1) == DiceAdmin.Prefix then
-			ExecuteCmd(plr.Name,string.sub(newCmd,2))
+	if IsServer then
+		if type == 'Admin' then
+			if not table.find(DiceAdmin.Admins,plr.UserId) and not IsStudio then return end
+			local newCmd = DiceAdmin.Prefix..message
+			if string.sub(newCmd,1,1) == DiceAdmin.Prefix then
+				ExecuteCmd(plr.Name,string.sub(newCmd,2))
+			end
 		end
-	elseif Services['RunService']:IsClient() then
+	elseif IsClient then
 		if type == 'Admin' then
 			Network.Command:FireServer(type,message)
 		elseif type == 'Info' then
@@ -78,6 +88,7 @@ function DiceAdmin:Network(type,message,plr)
 			return Network.Ping:InvokeServer()
 		end
 	end
+	return false
 end
 
 function DiceAdmin:Initialize()
@@ -89,31 +100,34 @@ function DiceAdmin:Initialize()
 	end
 end
 
-if Services['RunService']:IsServer() then
-	local currentClock = os.clock()
-	while not _G.YieldForDeck and os.clock() - currentClock < 1 do Services['RunService'].Heartbeat:Wait() end
-	if _G.YieldForDeck then
-		local LoadLibrary = require(_G.YieldForDeck('PlayingCards'))
-		DiceAdmin.Information = LoadLibrary('Information',true)
-		script.Parent = _G.YieldForDeck('DeckClient')
-	else
-		script.Parent = Services['ReplicatedStorage']
-	end
-	DiceAdmin.Commands = require(Modules.Commands)
-	Modules.Parent = Services['ServerScriptService']
-	Interface.Parent = Services['ServerScriptService']
-	Network.Command.OnServerEvent:Connect(function(plr,type,message)
-		DiceAdmin:Network(type,message,plr)
-	end)
-	Network.Ping.OnServerInvoke = function()
-		return true
-	end
-	Network.Info.OnServerInvoke = function()
-		if DiceAdmin.Information then
-			return DiceAdmin.Information:Retrieve()
+Manager.wrap(function()
+	if IsServer then
+		local currentClock = os.clock()
+		while not _G.YieldForDeck and os.clock() - currentClock < 1 do Manager.wait() end
+		if _G.YieldForDeck then
+			local LoadLibrary = require(_G.YieldForDeck('PlayingCards'))
+			DiceAdmin.Information = LoadLibrary('Information')
+		else
+			script.Parent = Services['ReplicatedStorage']
 		end
-		return {}
+		DiceAdmin.Commands = require(Modules.Commands)
+		Interface.Parent = Services['ServerScriptService']
+		Network.Command.OnServerEvent:Connect(function(plr,type,message)
+			DiceAdmin:Network(type,message,plr)
+		end)
+		Network.Ping.OnServerInvoke = function()
+			return true
+		end
+		Network.Info.OnServerInvoke = function()
+			if DiceAdmin.Information then
+				return DiceAdmin.Information:Retrieve()
+			end
+			return {}
+		end
+		MsgService:ConnectKey('MafiaChat',function(message)
+			print(message)
+		end)
 	end
-end
+end)
 
 return DiceAdmin
