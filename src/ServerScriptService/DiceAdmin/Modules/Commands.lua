@@ -5,26 +5,29 @@
 
 --// logic
 local Cmds = {}
-Cmds.repr = require(script.Parent:FindFirstChild('repr'))
-Cmds.MsgService = require(script.Parent:FindFirstChild('MsgService'))
 Cmds.CommandList = nil
 Cmds.DataStore = nil
 Cmds.LoadString = nil
 
 --// services
-local LoadLibrary = require(game:GetService('ReplicatedStorage'):WaitForChild('PlayingCards'))
 local Services = setmetatable({}, {__index = function(cache, serviceName)
     cache[serviceName] = game:GetService(serviceName)
     return cache[serviceName]
 end})
 
+--// variables
+local Modules = script.Parent
+local repr = require(Modules:WaitForChild('repr'))
+local MsgService = require(Modules:WaitForChild('MsgService'))
+local Manager = require(Modules:WaitForChild('Manager'))
+
 --// functions
 local function Print(arg1,arg2,arg3,arg4)
-	print('[ADMIN]: Command:',arg1,'| Target:',arg2,'| Speaker:',arg3,'|',arg4)
+	print('[DICE ADMIN]: Command:',arg1,'| Target:',arg2,'| Speaker:',arg3,'|',arg4)
 end
 
 local function Warn(arg1,arg2,arg3,arg4)
-	warn('[ADMIN]: Command:',arg1,'| Target:',arg2,'| Speaker:',arg3,'|',arg4)
+	warn('[DICE ADMIN]: Command:',arg1,'| Target:',arg2,'| Speaker:',arg3,'|',arg4)
 end
 
 local function GetPlayer(compareText,userID)
@@ -170,6 +173,26 @@ local Commands = {
 				Warn(COMMAND,'N/A',speaker,'Failed')
 			else
 				Warn(COMMAND,targetPlayer.Name,speaker,'Failed')
+			end
+			return
+		end
+	end;
+	['say'] = function(speaker,cmdArgs,fullMsg)
+		local COMMAND = cmdArgs[1]
+		local TARGET = cmdArgs[2]
+		if COMMAND == 'say' then
+			local txt = string.sub(fullMsg,#COMMAND + 2)
+			if txt then
+				local parse = '[CHAT]['..speaker..']: '..txt
+				MsgService:FireEvent('MafiaChat',parse)
+				Services['RunService'].Heartbeat:Wait()
+				print(parse)
+				return
+			end
+			if not txt then 
+				Warn(COMMAND,'N/A',speaker,'Failed')
+			else
+				Warn(COMMAND,txt,speaker,'Failed')
 			end
 			return
 		end
@@ -399,30 +422,9 @@ local Commands = {
 		if COMMAND == 'clear' then
 			local targetPlayer = GetPlayer(TARGET,true)
 			if Cmds.DataStore:GetData(targetPlayer) then
-				print('[ADMIN]:','Processing & removing data...')
-				ClearPlayer('\nData cleared:\nRejoin for a new profile',targetPlayer)
-				Cmds.DataStore:RemoveData(targetPlayer,true)
-				Print(COMMAND,targetPlayer,speaker,'Successful')
-				return
-			end
-			if not targetPlayer then 
-				Warn(COMMAND,'N/A',speaker,'Failed')
-			else
-				Warn(COMMAND,targetPlayer,speaker,'Failed')
-			end
-			return
-		end
-	end;
-	['rollback'] = function(speaker,cmdArgs,fullMsg)
-		if not Cmds.DataStore then return end
-		local COMMAND = cmdArgs[1]
-		local TARGET = cmdArgs[2]
-		if COMMAND == 'rollback' then
-			local targetPlayer = GetPlayer(TARGET,true)
-			if Cmds.DataStore:GetData(targetPlayer) then
-				print('[ADMIN]:','Processing & removing data...')
-				ClearPlayer('\nData rolled back:\nRejoin for a new profile',targetPlayer)
+				print('[DICE ADMIN]:','Processing & removing data')
 				Cmds.DataStore:RemoveData(targetPlayer)
+				ClearPlayer('\nCleared data',targetPlayer)
 				Print(COMMAND,targetPlayer,speaker,'Successful')
 				return
 			end
@@ -438,33 +440,36 @@ local Commands = {
 		if not Cmds.DataStore then return end
 		local COMMAND = cmdArgs[1]
 		local TARGET = cmdArgs[2]
-		local STAT = cmdArgs[3] or 'CanSave'
+		local STAT = cmdArgs[3]
 		if COMMAND == 'read' then
 			local targetPlayer = GetPlayer(TARGET,true)
 			local grabData = Cmds.DataStore:GetData(targetPlayer,STAT)
-			local allData = Cmds.DataStore:GetData(targetPlayer)
-			if grabData then
-				if type(grabData) == 'table' then
-					print(string.upper(STAT)..':')
-					Services['RunService'].Heartbeat:Wait()
-					print(Cmds.repr(grabData))
-				else
-					print(string.upper(STAT)..':',grabData)
-				end
+			if targetPlayer and STAT then
+				print('['..STAT..']:')
+				Services['RunService'].Heartbeat:Wait()
+				print(repr(grabData))
+				Services['RunService'].Heartbeat:Wait()
 				Print(COMMAND,targetPlayer,speaker,'Successful')
 				return
-			elseif allData then
-				print('ALL DATA:')
+			elseif targetPlayer and STAT == nil then
+				local name
+				local success,err = pcall(function()
+					name = Services['Players']:GetNameFromUserIdAsync(tonumber(targetPlayer))
+				end)
+				name = name and name..' | '..targetPlayer or targetPlayer
+				print('['..name..']:')
 				Services['RunService'].Heartbeat:Wait()
-				for index,data in pairs(allData) do
+				for index,data in pairs(grabData) do
+					if index == '___PlayingCards' then continue end
 					local grabStat = Cmds.DataStore:GetData(targetPlayer,index)
-					print(string.upper(index)..':')
+					print(index..':')
 					Services['RunService'].Heartbeat:Wait()
-					print(Cmds.repr(grabStat))
+					print(repr(grabStat))
 					Services['RunService'].Heartbeat:Wait()
 				end
 				Services['RunService'].Heartbeat:Wait()
 				Cmds.DataStore:CalculateSize(targetPlayer)
+				Services['RunService'].Heartbeat:Wait()
 				Print(COMMAND,targetPlayer,speaker,'Successful')
 				return
 			end
@@ -590,28 +595,28 @@ local Commands = {
 	end;
 	-- CLIENT ONLY
 	['fps'] = function()
-		warn('[ADMIN]:','You can only use this command in the console!')
+		warn('[DICE ADMIN]:','You can only use this command in the console!')
 	end;
 	['fov'] = function()
-		warn('[ADMIN]:','You can only use this command in the console!')
+		warn('[DICE ADMIN]:','You can only use this command in the console!')
 	end;
 	['ping'] = function()
-		warn('[ADMIN]:','You can only use this command in the console!')
+		warn('[DICE ADMIN]:','You can only use this command in the console!')
 	end;
 	['noclip'] = function()
-		warn('[ADMIN]:','You can only use this command in the console!')
+		warn('[DICE ADMIN]:','You can only use this command in the console!')
 	end;
 	['server'] = function()
-		warn('[ADMIN]:','You can only use this command in the console!')
+		warn('[DICE ADMIN]:','You can only use this command in the console!')
 	end;
 	['reverso'] = function()
-		warn('[ADMIN]:','You can only use this command in the console!')
+		warn('[DICE ADMIN]:','You can only use this command in the console!')
 	end;
 	['stats'] = function()
-		warn('[ADMIN]:','You can only use this command in the console!')
+		warn('[DICE ADMIN]:','You can only use this command in the console!')
 	end;
 	['memory'] = function()
-		warn('[ADMIN]:','You can only use this command in the console!')
+		warn('[DICE ADMIN]:','You can only use this command in the console!')
 	end;
 }
 Cmds.CommandList = Commands
