@@ -23,11 +23,11 @@ local Player = Services['Players'].LocalPlayer
 
 --// functions
 local function Print(arg1,arg2,arg3,arg4)
-	print('[ADMIN]: Command:',arg1,'| Target:',arg2,'| Speaker:',arg3,'|',arg4)
+	print('[DICE ADMIN]: Command:',arg1,'| Target:',arg2,'| Speaker:',arg3,'|',arg4)
 end
 
 local function Warn(arg1,arg2,arg3,arg4)
-	warn('[ADMIN]: Command:',arg1,'| Target:',arg2,'| Speaker:',arg3,'|',arg4)
+	warn('[DICE ADMIN]: Command:',arg1,'| Target:',arg2,'| Speaker:',arg3,'|',arg4)
 end
 
 Commands.Admin = {
