@@ -3,28 +3,7 @@
 	@Desc: Dice Admin is an admin script with PlayingCards
 --]]
 
---// services
-local Services = setmetatable({}, {__index = function(cache, serviceName)
-    cache[serviceName] = game:GetService(serviceName)
-    return cache[serviceName]
-end})
-
---// variables
-local Player = Services['Players'].LocalPlayer
-local PlayerScripts = Player:WaitForChild('PlayerScripts')
-
-local Commands = require(script:WaitForChild('Modules'):WaitForChild('Cmds'))
-local ChatMain = require(PlayerScripts:WaitForChild('ChatScript'):WaitForChild('ChatMain'))
-local Cmds = Commands.Admin
-
-local Toggle = script.Parent:WaitForChild('Toggle')
-local MobileBar = script.Parent:WaitForChild('Mobile')
-local Console = script.Parent:WaitForChild('Console')
-local Command = Console:WaitForChild('Command')
-local Help = Console:WaitForChild('Help')
-local Output = Console:WaitForChild('Output')
-local Line = script:WaitForChild('Elements'):WaitForChild('Feed')
-
+--// logic
 local Libraries = {}
 Libraries.DiceAdmin = nil
 Libraries.DiceAssignSizes = nil
@@ -55,6 +34,30 @@ Logs.Elements = {}
 Logs.Last = nil
 Logs.Count = 0
 
+--// services
+local Services = setmetatable({}, {__index = function(cache, serviceName)
+    cache[serviceName] = game:GetService(serviceName)
+    return cache[serviceName]
+end})
+
+--// variables
+local Player = Services['Players'].LocalPlayer
+local PlayerScripts = Player:WaitForChild('PlayerScripts')
+
+local Modules = script:WaitForChild('Modules')
+local Commands = require(Modules:WaitForChild('Cmds'))
+local Blur = require(Modules:WaitForChild('Blur'))
+local ChatMain = require(PlayerScripts:WaitForChild('ChatScript'):WaitForChild('ChatMain'))
+local Cmds = Commands.Admin
+
+local Toggle = script.Parent:WaitForChild('Toggle')
+local MobileBar = script.Parent:WaitForChild('Mobile')
+local Console = script.Parent:WaitForChild('Console')
+local Command = Console:WaitForChild('Command')
+local Help = Console:WaitForChild('Help')
+local Output = Console:WaitForChild('Output')
+local Line = script:WaitForChild('Elements'):WaitForChild('Feed')
+
 --// functions
 local function FilterMsg(message,color)
 	if Logs.Last == message then
@@ -69,6 +72,9 @@ local function FilterMsg(message,color)
 		wait(Configs.Timeout)
 		table.remove(Configs.Cache,table.find(Configs.Cache,string.lower(message)))
 	end)()
+	if string.sub(message,11,16) == '[CHAT]' then
+		color = Color3.fromRGB(164, 128, 255);
+	end
 	if Libraries.DiceOutput then
 		for index,remove in pairs(Libraries.DiceOutput.Filter) do
 			if string.sub(message,1,#remove) == remove then
@@ -77,7 +83,7 @@ local function FilterMsg(message,color)
 					message = string.reverse(string.sub(message,3))
 					message = '> '..message
 				end
-				return message,Logs.Count
+				return message,color,Logs.Count
 			end
 		end
 	end
@@ -85,11 +91,11 @@ local function FilterMsg(message,color)
 		message = string.reverse(string.sub(message,3))
 		message = '> '..message
 	end
-	return message,Logs.Count
+	return message,color,Logs.Count
 end
 
 local function CreateFeed(contents)
-	local message,dupe = FilterMsg(contents['Text'],contents['Color'])
+	local message,color,dupe = FilterMsg(contents['Text'],contents['Color'])
 	if not message then return end
 	if dupe > 1 then
 		local getOld = Logs.Elements[#Logs.Elements]
@@ -99,7 +105,6 @@ local function CreateFeed(contents)
 			getOld.Multiple.Size = UDim2.new(0, getOld.Multiple.TextBounds.X, 0, 20)
 		end
 	else
-		local color = contents['Color']
 		local feed = Line:Clone()
 		feed.Text = message
 		feed.TextColor3 = color
@@ -183,6 +188,9 @@ local function EnableConsole()
 		MobileBar.Visible = true
 	end
 	Console.Visible = not Console.Visible
+	coroutine.wrap(function()
+		Blur.Enable(Console.Visible)
+	end)()
 	if Console.Visible then
 		Services['RunService'].Heartbeat:Wait()
 		Output.CanvasPosition = Vector2.new(0, Output.CanvasSize.Y.Offset)
@@ -204,6 +212,9 @@ local function EnableConsole()
 		for ui,value in pairs(Configs.Interface) do
 			ui.Enabled = value
 		end
+	end
+	if not Console.Visible then
+		Command:ReleaseFocus()
 	end
 end
 
@@ -311,6 +322,6 @@ coroutine.wrap(function()
 			CreateFeed(contents)
 		end)
 	else
-		Libraries.DiceAdmin = Services['ReplicatedStorage']:WaitForChild('DiceAdmin')
+		Libraries.DiceAdmin = require(Services['ReplicatedStorage']:WaitForChild('DiceAdmin'))
 	end
 end)()
