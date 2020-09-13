@@ -14,6 +14,7 @@ end})
 local function GetBlur()
 	if not Blur.Cache then
 		local new = Instance.new('BlurEffect')
+		new.Name = 'DiceBlur'
 		new.Size = 0
 		new.Enabled = false
 		new.Parent = Services['Lighting']
