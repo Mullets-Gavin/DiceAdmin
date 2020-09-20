@@ -8,6 +8,7 @@ local Cmds = {}
 Cmds.CommandList = nil
 Cmds.DataStore = nil
 Cmds.LoadString = nil
+Cmds.LoadLibrary = nil
 
 --// services
 local Services = setmetatable({}, {__index = function(cache, serviceName)
@@ -20,6 +21,14 @@ local Modules = script.Parent
 local repr = require(Modules:WaitForChild('repr'))
 local MsgService = require(Modules:WaitForChild('MsgService'))
 local Manager = require(Modules:WaitForChild('Manager'))
+local FlagsDoc = [=[get [,flag]
+└ get the current state of the flag
+└ leave the flag parameter empty to print all flags
+
+set flag bool
+└ set the given flag with the bool (true/false)
+
+Internal flags are set per environment, these only work for the server]=]
 
 --// functions
 local function Print(arg1,arg2,arg3,arg4)
@@ -376,6 +385,58 @@ local Commands = {
 			return
 		end
 	end;
+	-- IN-GAME STATES
+	['flags'] = function(speaker,cmdArgs,fullMsg)
+		if not Cmds.LoadLibrary then return end
+		local COMMAND = cmdArgs[1]
+		local TARGET = cmdArgs[2]
+		local VALUE = cmdArgs[3]
+		local BOOL = cmdArgs[4]; do
+			if BOOL ~= nil then
+				if string.lower(BOOL) == 'true' then
+					BOOL = true
+				elseif string.lower(BOOL) == 'false' then
+					BOOL = false
+				end
+			end
+		end
+		if COMMAND == 'flags' then
+			local success = false
+			if TARGET == 'get' then
+				if VALUE ~= nil then
+					local getFlag = Cmds.LoadLibrary():GetFlag(VALUE)
+					print('[01]:',string.lower(VALUE),'|',getFlag)
+					success = true
+				else
+					local counter = 0
+					for flag,current in pairs(Cmds.LoadLibrary():GetFlags()) do
+						counter = counter + 1
+						print('['..string.format('%02.f',counter)..']:',flag,'|',current)
+						Services['RunService'].Heartbeat:Wait()
+					end
+					success = true
+				end
+			elseif TARGET == 'set' then
+				local getFlag = Cmds.LoadLibrary():GetFlag(VALUE)
+				if getFlag ~= nil then
+					Cmds.LoadLibrary():SetFlag(VALUE,BOOL)
+				end
+				success = true
+			elseif TARGET == 'help' then
+				print(FlagsDoc)
+				Manager.wait()
+				success = true
+			end
+			Manager.wait()
+			if success then
+				Print(COMMAND,COMMAND,speaker,'Successful')
+			elseif not TARGET then 
+				Warn(COMMAND,'N/A',speaker,'Failed')
+			else
+				Warn(COMMAND,TARGET,speaker,'Failed')
+			end
+		end
+	end;
 	-- DATASTORES
 	['load'] = function(speaker,cmdArgs,fullMsg)
 		if not Cmds.DataStore then return end
@@ -625,9 +686,9 @@ coroutine.wrap(function()
 	local currentClock = os.clock()
 	while not _G.YieldForDeck and os.clock() - currentClock < 1 do Services['RunService'].Heartbeat:Wait() end
 	if _G.YieldForDeck then
-		local LoadLibrary = require(_G.YieldForDeck('PlayingCards'))
-		Cmds.DataStore = LoadLibrary('DiceDataStore')
-		Cmds.LoadString = LoadLibrary('LoadString')
+		Cmds.LoadLibrary = require(_G.YieldForDeck('PlayingCards'))
+		Cmds.DataStore = Cmds.LoadLibrary('DiceDataStore')
+		Cmds.LoadString = Cmds.LoadLibrary('LoadString')
 	end
 end)()
 
