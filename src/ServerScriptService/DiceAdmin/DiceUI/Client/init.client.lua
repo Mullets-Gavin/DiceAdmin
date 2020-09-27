@@ -44,9 +44,7 @@ end})
 local Player = Services['Players'].LocalPlayer
 local PlayerScripts = Player:WaitForChild('PlayerScripts')
 
-local Modules = script:WaitForChild('Modules')
-local Commands = require(Modules:WaitForChild('Cmds'))
-local Blur = require(Modules:WaitForChild('Blur'))
+local Commands = require(script:WaitForChild('Modules'):WaitForChild('Cmds'))
 local ChatMain = require(PlayerScripts:WaitForChild('ChatScript'):WaitForChild('ChatMain'))
 local Cmds = Commands.Admin
 
@@ -188,9 +186,6 @@ local function EnableConsole()
 		MobileBar.Visible = true
 	end
 	Console.Visible = not Console.Visible
-	coroutine.wrap(function()
-		Blur.Enable(Console.Visible)
-	end)()
 	if Console.Visible then
 		Services['RunService'].Heartbeat:Wait()
 		Output.CanvasPosition = Vector2.new(0, Output.CanvasSize.Y.Offset)
@@ -212,9 +207,6 @@ local function EnableConsole()
 		for ui,value in pairs(Configs.Interface) do
 			ui.Enabled = value
 		end
-	end
-	if not Console.Visible then
-		Command:ReleaseFocus()
 	end
 end
 
